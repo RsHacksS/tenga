@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Skin and Cape Merger</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+        }
+        .input-container {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Merge Minecraft Skin and Cape</h1>
+    <div class="input-container">
+        <label for="skinInput">Upload Skin PNG (64x64 or 64x32):</label>
+        <input type="file" id="skinInput" accept="image/png">
+    </div>
+    <div class="input-container">
+        <label for="capeInput">Upload Cape PNG (64x32):</label>
+        <input type="file" id="capeInput" accept="image/png">
+    </div>
+    <button id="mergeButton">Merge Images</button>
+    <br><br>
+    <canvas id="outputCanvas" width="64" height="64"></canvas>
+    <br>
+    <a id="downloadLink" style="display:none;">Download Merged Skin</a>
+
+    <script>
+        const skinInput = document.getElementById("skinInput");
+        const capeInput = document.getElementById("capeInput");
+        const mergeButton = document.getElementById("mergeButton");
+        const canvas = document.getElementById("outputCanvas");
+        const ctx = canvas.getContext("2d");
+        const downloadLink = document.getElementById("downloadLink");
+
+        let skinImage = null;
+        let capeImage = null;
+
+        function loadImage(input, callback) {
+            const file = input.files[0];
+            if (file && file.type === "image/png") {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = new Image();
+                    img.onload = () => callback(img);
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert("Please upload a valid PNG file.");
+            }
+        }
+
+        skinInput.addEventListener("change", () => {
+            loadImage(skinInput, (img) => {
+                skinImage = img;
+            });
+        });
+
+        capeInput.addEventListener("change", () => {
+            loadImage(capeInput, (img) => {
+                capeImage = img;
+            });
+        });
+
+        mergeButton.addEventListener("click", () => {
+            if (!skinImage || !capeImage) {
+                alert("Please upload both skin and cape images.");
+                return;
+            }
+
+            // Check skin size (64x64 or 64x32)
+            if (skinImage.width !== 64 || (skinImage.height !== 64 && skinImage.height !== 32)) {
+                alert("Skin must be 64x64 or 64x32 pixels.");
+                return;
+            }
+
+            if (capeImage.width !== 64 || capeImage.height !== 32) {
+                alert("Cape must be 64x32 pixels.");
+                return;
+            }
+
+            // Adjust canvas size based on skin size
+            canvas.width = 64;
+            canvas.height = skinImage.height;
+
+            // Draw the skin
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(skinImage, 0, 0, canvas.width, canvas.height);
+
+            // Overlay the cape in the correct position (cape added to the bottom of the canvas)
+            const capeYPosition = skinImage.height === 64 ? 32 : 16;
+            ctx.drawImage(capeImage, 0, capeYPosition, canvas.width, capeImage.height);
+
+            // Show download link
+            downloadLink.href = canvas.toDataURL();
+            downloadLink.download = "merged_skin.png";
+            downloadLink.style.display = "block";
+            downloadLink.textContent = "Download Merged Skin";
+        });
+    </script>
+</body>
+</html>
